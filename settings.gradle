@@ -1,0 +1,1 @@
+include ':app', ':annotate', ':processor', ':xgreendao'

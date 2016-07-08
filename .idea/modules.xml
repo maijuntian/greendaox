@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/GreenDaoX.iml" filepath="$PROJECT_DIR$/GreenDaoX.iml" />
+      <module fileurl="file://$PROJECT_DIR$/annotate/annotate.iml" filepath="$PROJECT_DIR$/annotate/annotate.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/processor/processor.iml" filepath="$PROJECT_DIR$/processor/processor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/xgreendao/xgreendao.iml" filepath="$PROJECT_DIR$/xgreendao/xgreendao.iml" />
+    </modules>
+  </component>
+</project>
