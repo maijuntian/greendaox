@@ -5,9 +5,18 @@ import com.google.auto.service.AutoService;
 import com.mai.annotate.Column;
 import com.mai.annotate.DataBase;
 import com.mai.annotate.Id;
+import com.mai.annotate.ManyToMany;
+import com.mai.annotate.ManyToOne;
+import com.mai.annotate.OneToMany;
+import com.mai.annotate.OneToOne;
 import com.mai.annotate.Table;
+import com.mai.annotate.Cascade;
 import com.mai.bean.ColumnM;
+import com.mai.bean.ManyToManyM;
+import com.mai.bean.ToManyM;
+import com.mai.bean.ToOneM;
 import com.mai.java.BaseDataBaseManagerImplJava;
+import com.mai.java.BeanJava;
 import com.mai.java.DaoJava;
 import com.mai.java.DaoMasterJava;
 import com.mai.java.DaoSessionJava;
@@ -17,6 +26,8 @@ import com.mai.bean.TableM;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,6 +51,13 @@ import javax.tools.JavaFileObject;
 @AutoService(Processor.class)
 public class GeneratorProcessor extends AbstractProcessor {
 
+    private final String DEFAULT_PKG = "com.mai.xgreendao";
+    private final String DEFAULT_PKG_DAO = DEFAULT_PKG + ".dao";
+    private final String DEFAULT_PKG_BEAN = DEFAULT_PKG + ".bean";
+
+
+    private final boolean IS_DEBUG = false;
+
     static Map<String, String> types = new HashMap<>();
     static final String UNSUPPORT_TYPE = "Not support Byte[], please uses byte[]!";
 
@@ -54,8 +72,6 @@ public class GeneratorProcessor extends AbstractProcessor {
         types.put("java.lang.Byte[]", UNSUPPORT_TYPE);
     }
 
-    private final String DEFAULT_PKG = "com.mai.xgreendao.dao";
-
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> types = new LinkedHashSet<String>();
@@ -63,6 +79,10 @@ public class GeneratorProcessor extends AbstractProcessor {
         types.add(Table.class.getCanonicalName());
         types.add(Column.class.getCanonicalName());
         types.add(Id.class.getCanonicalName());
+        types.add(ManyToMany.class.getCanonicalName());
+        types.add(ManyToOne.class.getCanonicalName());
+        types.add(OneToMany.class.getCanonicalName());
+        types.add(OneToOne.class.getCanonicalName());
         return types;
     }
 
@@ -80,22 +100,29 @@ public class GeneratorProcessor extends AbstractProcessor {
     }
 
     private void error(Element element, String message, Object... args) {
-        if (args.length > 0) {
+        if (args != null && args.length > 0) {
             message = String.format(message, args);
         }
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message, element);
+        throw new IllegalStateException(message);
     }
 
     private void error(Element element, Exception e) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getMessage(), element);
+        throw new IllegalStateException(e.getMessage());
     }
 
+    private void error(String message) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message);
+    }
 
     private void note(Element element, String message, Object... args) {
-        if (args.length > 0) {
-            message = String.format(message, args);
+        if (IS_DEBUG) {
+            if (args.length > 0) {
+                message = String.format(message, args);
+            }
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message, element);
         }
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message, element);
     }
 
     private String getPackageName(TypeElement type) {
@@ -129,11 +156,11 @@ public class GeneratorProcessor extends AbstractProcessor {
             TableM tableM = new TableM();
             tableM.setElement(element);
             Table table = element.getAnnotation(Table.class);
-            tableM.setName(table.name());
             tableM.setType(tel.getQualifiedName().toString());
             tableM.setClazzName(tel.getSimpleName().toString());
             tableM.setName("".equals(table.name()) ? tableM.getClazzName().toLowerCase() : table.name());
-            tableM.setCreateIndex(table.createIndex());
+            tableM.addCreateIndexs(table.createIndex());
+            tableM.setMidTable(false);
             tables.put(tableM.getType(), tableM);
             note(element, "表：" + tableM.toString());
         }
@@ -150,10 +177,13 @@ public class GeneratorProcessor extends AbstractProcessor {
                 String tableKey = enclosingElement.getQualifiedName().toString();
                 TableM tableM = tables.get(tableKey);
 
+                checkTable(element, tableM);
+
                 VariableElement vel = (VariableElement) element;
                 ColumnM columnM = new ColumnM();
                 Column column = vel.getAnnotation(Column.class);
                 columnM.setField(vel.getSimpleName().toString());
+                columnM.setIsboolean(vel.getSimpleName().toString().equals("boolean"));
                 columnM.setType(getType(vel.asType().toString()));
                 columnM.setClazzName(columnM.getType().substring(columnM.getType().lastIndexOf(".") + 1));
                 columnM.setName("".equals(column.name()) ? columnM.getField() : column.name());
@@ -167,8 +197,6 @@ public class GeneratorProcessor extends AbstractProcessor {
                 error(element, e.getMessage());
             }
         }
-
-
     }
 
     private void parseId(Set<? extends Element> idSet, Map<String, TableM> tables) {
@@ -180,6 +208,7 @@ public class GeneratorProcessor extends AbstractProcessor {
                 // 拿到key
                 String tableKey = enclosingElement.getQualifiedName().toString();
                 TableM tableM = tables.get(tableKey);
+                checkTable(element, tableM);
 
                 VariableElement vel = (VariableElement) element;
                 ColumnM columnM = new ColumnM();
@@ -191,7 +220,7 @@ public class GeneratorProcessor extends AbstractProcessor {
                 columnM.setNull(false);
                 columnM.setPrimaryKey(true);
                 columnM.setAuto(id.autoIncrement());
-                if(id.autoIncrement() && !(columnM.getClazzName().equals("Long") || columnM.getClazzName().equals("long"))){
+                if (id.autoIncrement() && !(columnM.getClazzName().equals("Long") || columnM.getClazzName().equals("long"))) {
                     error(element, "AUTOINCREMENT is only available to primary key properties of type long/Long");
                 }
                 tableM.addColoum(columnM);
@@ -202,6 +231,226 @@ public class GeneratorProcessor extends AbstractProcessor {
                 error(element, e.getMessage());
             }
         }
+    }
+
+    private void checkTableId(TableM tableM) {
+        if (tableM.getpK() == null) {
+            error(tableM.getElement(), tableM.getType() + " miss id Annotation");
+        }
+    }
+
+    private void checkTable(Element element, TableM tableM) {
+        if (tableM == null) {
+            error(element, "miss table Annotation");
+        }
+    }
+
+    private void parseOneToMany(Set<? extends Element> set, Map<String, TableM> tables) {
+        for (Element element : set) {
+            try {
+                // 获取该元素封装类型
+                TypeElement enclosingElement = (TypeElement) element
+                        .getEnclosingElement();
+                // 拿到key
+                String tableKey = enclosingElement.getQualifiedName().toString();
+                TableM tableM = tables.get(tableKey);
+                checkTableId(tableM);
+
+                VariableElement vel = (VariableElement) element;
+                ToManyM toManyM = new ToManyM();
+                OneToMany oneToMany = element.getAnnotation(OneToMany.class);
+                TableM targetTable = tables.get(oneToMany.type());
+
+                toManyM.setTargetTable(targetTable);
+                toManyM.setTargetType(oneToMany.type());
+                toManyM.setField(vel.getSimpleName().toString());
+                toManyM.setIdProperty(tableM.getClazzName() + "Id");
+                toManyM.setLazy(oneToMany.lazy());
+                toManyM.setCascades(Arrays.asList(oneToMany.cascade()));
+                tableM.addToMany(toManyM);
+                note(element, "toManyM：" + toManyM.toString());
+            } catch (IllegalStateException e) {
+                error(element, e.getMessage());
+            }
+        }
+    }
+
+    private void parseManyToOne(Set<? extends Element> set, Map<String, TableM> tables) {
+        for (Element element : set) {
+            try {
+                // 获取该元素封装类型
+                TypeElement enclosingElement = (TypeElement) element
+                        .getEnclosingElement();
+                // 拿到key
+                String tableKey = enclosingElement.getQualifiedName().toString();
+                TableM tableM = tables.get(tableKey);
+                checkTableId(tableM);
+
+                VariableElement vel = (VariableElement) element;
+
+                ManyToOne manyToOne = element.getAnnotation(ManyToOne.class);
+
+                ToOneM toOneM = new ToOneM();
+                toOneM.setTargetType(vel.asType().toString());
+                TableM targetTableM = tables.get(toOneM.getTargetType());
+                checkTableId(targetTableM);
+
+                toOneM.setTargetTable(targetTableM);
+                toOneM.setTargetIdType(targetTableM.getpK().getClazzName());
+                toOneM.setField(vel.getSimpleName().toString());
+                toOneM.setTargetIdUpperField(targetTableM.getpK().getUpperField());
+                toOneM.setIdProperty(targetTableM.getClazzName() + "Id");
+                toOneM.setLazy(manyToOne.lazy());
+                toOneM.setCascades(Arrays.asList(manyToOne.cascade()));
+                tableM.addToOne(toOneM);
+
+                note(element, "toOneM：" + toOneM.toString());
+            } catch (IllegalStateException e) {
+                error(element, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 一对一需要 创建索引
+     */
+    private void parseOneToOne(Set<? extends Element> set, Map<String, TableM> tables) {
+        for (Element element : set) {
+            try {
+                // 获取该元素封装类型
+                TypeElement enclosingElement = (TypeElement) element
+                        .getEnclosingElement();
+                // 拿到key
+                String tableKey = enclosingElement.getQualifiedName().toString();
+                TableM tableM = tables.get(tableKey);
+                checkTableId(tableM);
+
+                VariableElement vel = (VariableElement) element;
+                ToOneM oneToOneM = new ToOneM();
+                oneToOneM.setTargetType(vel.asType().toString());
+                TableM targetTableM = tables.get(oneToOneM.getTargetType());
+                checkTableId(targetTableM);
+
+
+                OneToOne oneToOne = element.getAnnotation(OneToOne.class);
+                oneToOneM.setTargetTable(targetTableM);
+                oneToOneM.setTargetIdType(targetTableM.getpK().getClazzName());
+                oneToOneM.setField(vel.getSimpleName().toString());
+                oneToOneM.setTargetIdUpperField(targetTableM.getpK().getUpperField());
+                oneToOneM.setIdProperty(targetTableM.getClazzName() + "Id");
+                oneToOneM.setLazy(oneToOne.lazy());
+                oneToOneM.setCascades(Arrays.asList(oneToOne.cascade()));
+
+                tableM.addToOne(oneToOneM);
+
+                /**
+                 * 创建索引
+                 */
+
+                tableM.addOneToOneIndex(targetTableM);
+
+                note(element, "oneToOneM：" + oneToOneM.toString());
+            } catch (IllegalStateException e) {
+                error(element, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 多对多，需要新建中间表
+     */
+    private void parseManyToMany(Set<? extends Element> set, Map<String, TableM> tables) {
+        for (Element element : set) {
+            try {
+                // 获取该元素封装类型
+                TypeElement enclosingElement = (TypeElement) element
+                        .getEnclosingElement();
+                // 拿到key
+                String tableKey = enclosingElement.getQualifiedName().toString();
+                TableM tableM = tables.get(tableKey);
+                checkTableId(tableM);
+
+                ManyToMany manyToMany = element.getAnnotation(ManyToMany.class);
+                TableM targetTableM = tables.get(manyToMany.type());
+                checkTableId(targetTableM);
+
+                VariableElement vel = (VariableElement) element;
+                ManyToManyM manyToManyM = new ManyToManyM();
+                manyToManyM.setTargetTable(targetTableM);
+                manyToManyM.setField(vel.getSimpleName().toString());
+                manyToManyM.setInverse(manyToMany.inverse());
+                manyToManyM.setLazy(manyToMany.lazy());
+                manyToManyM.setCascades(Arrays.asList(manyToMany.cascade()));
+
+                //新建中间表
+                manyToManyM.setMidTable(newMidTable(tableM, targetTableM, tables));
+                tableM.addManyToMany(manyToManyM);
+
+                note(element, "ManytoManyM：" + manyToManyM.toString());
+            } catch (IllegalStateException e) {
+                error(element, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 新建中间表
+     *
+     * @param tableM
+     * @param targetTableM
+     * @param tables
+     * @return
+     */
+    private TableM newMidTable(TableM tableM, TableM targetTableM, Map<String, TableM> tables) {
+        String tableType1 = DEFAULT_PKG_BEAN + "." + tableM.getClazzName() + "_" + targetTableM.getClazzName() + "_";
+        String tableType2 = DEFAULT_PKG_BEAN + "." + targetTableM.getClazzName() + "_" + tableM.getClazzName() + "_";
+
+        if (tables.containsKey(tableType1)) {
+            return tables.get(tableType1);
+        }
+        if (tables.containsKey(tableType2)) {
+            return tables.get(tableType2);
+        }
+
+        TableM midTable = new TableM();
+        midTable.setType(tableType1);
+        midTable.setClazzName(tableM.getClazzName() + "_" + targetTableM.getClazzName() + "_");
+        midTable.setName(midTable.getClazzName().toLowerCase());
+
+        ColumnM id = new ColumnM();
+        id.setType(Long.class.toString());
+        id.setClazzName(Long.class.getSimpleName());
+        id.setName("id");
+        id.setField("id");
+        id.setAuto(true);
+        id.setPrimaryKey(true);
+        id.setIndex(0);
+        midTable.setpK(id);
+        midTable.addColoum(id);
+
+        ColumnM tableId = new ColumnM();
+        tableId.setType(tableM.getpK().getType());
+        tableId.setClazzName(tableM.getpK().getClazzName());
+        tableId.setName(tableM.getClazzName().toLowerCase() + "Id");
+        tableId.setField(tableM.getClazzName().toLowerCase() + "Id");
+        tableId.setIndex(1);
+        tableId.setNull(false);
+        midTable.addColoum(tableId);
+
+
+        ColumnM targetTableId = new ColumnM();
+        targetTableId.setType(targetTableM.getpK().getType());
+        targetTableId.setClazzName(targetTableM.getpK().getClazzName());
+        targetTableId.setName(targetTableM.getClazzName().toLowerCase() + "Id");
+        targetTableId.setField(targetTableM.getClazzName().toLowerCase() + "Id");
+        targetTableId.setIndex(1);
+        targetTableId.setNull(false);
+        midTable.addColoum(targetTableId);
+
+        midTable.setMidTable(true);
+        note(tableM.getElement(), "midTableM:" + midTable.toString());
+        tables.put(tableType1, midTable);
+        return midTable;
     }
 
     private void writeFile(String fileName, Element element, String content) {
@@ -224,30 +473,52 @@ public class GeneratorProcessor extends AbstractProcessor {
         Set<? extends Element> tableSet = roundEnv.getElementsAnnotatedWith(Table.class);
         Set<? extends Element> idSet = roundEnv.getElementsAnnotatedWith(Id.class);
         Set<? extends Element> coloumSet = roundEnv.getElementsAnnotatedWith(Column.class);
+        Set<? extends Element> manyToManySet = roundEnv.getElementsAnnotatedWith(ManyToMany.class);
+        Set<? extends Element> manyToOneSet = roundEnv.getElementsAnnotatedWith(ManyToOne.class);
+        Set<? extends Element> OneToManySet = roundEnv.getElementsAnnotatedWith(OneToMany.class);
+        Set<? extends Element> OneToOneSet = roundEnv.getElementsAnnotatedWith(OneToOne.class);
 
-        DataBaseM dataBase = parseDataBase(dataBaseSet);
         Map<String, TableM> tables = parseTable(tableSet);
-        if (tables.size() == 0) {
+        DataBaseM dataBase = parseDataBase(dataBaseSet);
+        if (dataBaseSet.size() == 0 && tableSet.size() == 0) {
             return false;
         }
-        List<TableM> tableMList = new ArrayList<>(tables.values());
-        if (dataBase == null) {
-            error(tables.get(0).getElement(), "Miss DataBase Annotation");
+        if (dataBaseSet.size() == 0) {
+            error("Miss DataBase Annotation");
+        }
+        if (tables.size() == 0) {
+            error("Miss Table Annotation");
         }
         parseId(idSet, tables);
         parseColoum(coloumSet, tables);
-        writeFile(DEFAULT_PKG + ".DaoSession", tableMList.get(0).getElement(), new DaoSessionJava(DEFAULT_PKG, tableMList).brewJave());
+        parseManyToOne(manyToOneSet, tables);
+        parseOneToMany(OneToManySet, tables);
+        parseOneToOne(OneToOneSet, tables);
+
+        parseManyToMany(manyToManySet, tables);
+
+
+        List<TableM> tableMList = new ArrayList<>(tables.values());
+
+        /**************java文件输出*******************/
+        writeFile(DEFAULT_PKG_DAO + ".DaoSession", tableMList.get(0).getElement(), new DaoSessionJava(DEFAULT_PKG_DAO, tableMList).brewJave());
 
         for (TableM tableM : tableMList) {
-            DaoJava daoJava = new DaoJava(DEFAULT_PKG, tableM);
-            writeFile(DEFAULT_PKG + "." + daoJava.getDaoName(), tableM.getElement(), daoJava.brewJava());
+            DaoJava daoJava = new DaoJava(DEFAULT_PKG_DAO, tableM);
+            writeFile(DEFAULT_PKG_DAO + "." + daoJava.getDaoName(), tableM.getElement(), daoJava.brewJava());
+            if (tableM.isMidTable()) { //中间表需要创建bean
+                BeanJava beanJava = new BeanJava(DEFAULT_PKG_BEAN, tableM);
+                writeFile(DEFAULT_PKG_BEAN + "." + tableM.getClazzName(), tableM.getElement(), beanJava.brewJava());
+            }
         }
 
-        writeFile(DEFAULT_PKG + ".DaoMaster", tableMList.get(0).getElement(), new DaoMasterJava(tableMList, DEFAULT_PKG, dataBase).brewJava());
+        writeFile(DEFAULT_PKG_DAO + ".DaoMaster", tableMList.get(0).getElement(), new DaoMasterJava(tableMList, DEFAULT_PKG_DAO, dataBase).brewJava());
 
-        BaseDataBaseManagerImplJava dataBaseManagerImplJava = new BaseDataBaseManagerImplJava(dataBase, DEFAULT_PKG);
+        BaseDataBaseManagerImplJava dataBaseManagerImplJava = new BaseDataBaseManagerImplJava(dataBase, DEFAULT_PKG_DAO);
         writeFile(dataBaseManagerImplJava.getDatabaseManagerClass(), tableMList.get(0).getElement(), dataBaseManagerImplJava.brewJava());
-        return false;
+        /**************java文件输出*******************/
+
+        return true;
     }
 
 }

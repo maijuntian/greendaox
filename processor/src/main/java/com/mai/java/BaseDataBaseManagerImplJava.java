@@ -11,7 +11,7 @@ public class BaseDataBaseManagerImplJava {
 
     private final String DEFAULT_PKG = "com.mai.xgreendao.base";
 
-    private final String DATABASE_MANAGER_CLASS = DEFAULT_PKG + ".BaseDataBaseManagerImpl";
+    private final String DATABASE_MANAGER_CLASS = DEFAULT_PKG + ".DBManagerImpl";
 
     private DataBaseM dataBaseM;
 
@@ -34,7 +34,7 @@ public class BaseDataBaseManagerImplJava {
                 "import " + pkg + ".DaoMaster;\n" +
                 "import " + pkg + ".DaoSession;\n" +
                 "\n" +
-                "public class BaseDataBaseManagerImpl implements BaseDataBaseManager.SessionInter{\n" +
+                "public class DBManagerImpl implements DBManager.SessionInter{\n" +
                 "\n" +
                 "    @Override\n" +
                 "    public AbstractDaoSession getDaoSession(Context context) {\n" +

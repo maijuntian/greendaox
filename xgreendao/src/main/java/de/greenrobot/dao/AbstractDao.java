@@ -256,7 +256,7 @@ public abstract class AbstractDao<T, K> {
         insertOrReplaceInTx(Arrays.asList(entities), isEntityUpdateable());
     }
 
-    private void executeInsertInTx(SQLiteStatement stmt, Iterable<T> entities, boolean setPrimaryKey) {
+    protected void executeInsertInTx(SQLiteStatement stmt, Iterable<T> entities, boolean setPrimaryKey) {
         db.beginTransaction();
         try {
             synchronized (stmt) {
@@ -294,37 +294,6 @@ public abstract class AbstractDao<T, K> {
         return executeInsert(entity, statements.getInsertStatement());
     }
 
-    /**
-     * Insert an entity into the table associated with a concrete DAO <b>without</b> setting key property.
-     *
-     * Warning: This may be faster, but the entity should not be used anymore. The entity also won't be attached to
-     * identity scope.
-     *
-     * @return row ID of newly inserted entity
-     */
-    public long insertWithoutSettingPk(T entity) {
-        SQLiteStatement stmt = statements.getInsertStatement();
-        long rowId;
-        if (db.isDbLockedByCurrentThread()) {
-            synchronized (stmt) {
-                bindValues(stmt, entity);
-                rowId = stmt.executeInsert();
-            }
-        } else {
-            // Do TX to acquire a connection before locking the stmt to avoid deadlocks
-            db.beginTransaction();
-            try {
-                synchronized (stmt) {
-                    bindValues(stmt, entity);
-                    rowId = stmt.executeInsert();
-                }
-                db.setTransactionSuccessful();
-            } finally {
-                db.endTransaction();
-            }
-        }
-        return rowId;
-    }
 
     /**
      * Insert an entity into the table associated with a concrete DAO.
@@ -335,7 +304,7 @@ public abstract class AbstractDao<T, K> {
         return executeInsert(entity, statements.getInsertOrReplaceStatement());
     }
 
-    private long executeInsert(T entity, SQLiteStatement stmt) {
+    protected long executeInsert(T entity, SQLiteStatement stmt) {
         long rowId;
         if (db.isDbLockedByCurrentThread()) {
             synchronized (stmt) {
@@ -572,7 +541,7 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    private void deleteByKeyInsideSynchronized(K key, SQLiteStatement stmt) {
+    protected void deleteByKeyInsideSynchronized(K key, SQLiteStatement stmt) {
         if (key instanceof Long) {
             stmt.bindLong(1, (Long) key);
         } else if (key == null) {
@@ -583,7 +552,7 @@ public abstract class AbstractDao<T, K> {
         stmt.execute();
     }
 
-    private void deleteInTxInternal(Iterable<T> entities, Iterable<K> keys) {
+    protected void deleteInTxInternal(Iterable<T> entities, Iterable<K> keys) {
         assertSinglePk();
         SQLiteStatement stmt = statements.getDeleteStatement();
         List<K> keysToRemoveFromIdentityScope = null;

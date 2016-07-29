@@ -10,6 +10,7 @@ public class ColumnM {
     private String field; //属性名
     private String upperField;
     private String clazzName;
+    private boolean isboolean;
     private boolean isNull = true;
     private int index;
     private boolean isPrimaryKey;
@@ -17,6 +18,14 @@ public class ColumnM {
     private boolean isUnique;
 
     public ColumnM() {
+    }
+
+    public boolean isboolean() {
+        return isboolean;
+    }
+
+    public void setIsboolean(boolean isboolean) {
+        this.isboolean = isboolean;
     }
 
     public String getName() {

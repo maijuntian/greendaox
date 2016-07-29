@@ -7,6 +7,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:2.1.2'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+        classpath 'com.novoda:bintray-release:0.3.4'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -16,8 +17,34 @@ allprojects {
     repositories {
         jcenter()
     }
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addStringOption('encoding', 'UTF-8')
+    }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+//添加
+ext {
+    userOrg = 'hongyangandroid'
+    groupId = 'com.zhy'
+    uploadName = 'MPermission'
+    publishVersion = '1.0.1'
+    desc = 'a easy API to use runtime permission for Android M '
+    website = 'https://github.com/hongyangAndroid/MPermissions'
+    licences = ['Apache-2.0']
+}
+//添加
+ext {
+    userOrg = 'maijuntian'//bintray.com用户名
+    groupId = 'com.mai.xgreendao'//jcenter上的路径
+    uploadName = 'GreenDaox'
+    publishVersion = '1.0.1'//版本号
+    desc = 'An apt Orm tools for android'//描述，不重要
+    website = 'https://github.com/maijuntian/greendaox'
+    licences = ['Apache-2.0']
+//网站，不重要；尽量模拟github上的地址，例如我这样的；当然你有地址最好了
 }

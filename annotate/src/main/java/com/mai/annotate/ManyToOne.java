@@ -6,23 +6,22 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by mai on 16/6/28.
+ * Created by mai on 16/7/9.
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.CLASS)
-public @interface Table {
+public @interface ManyToOne {
 
     /**
-     * 表名
+     * 是否开启懒加载
      *
      * @return
      */
-    String name() default "";
+    boolean lazy() default true;
 
     /**
-     * 创建索引
-     *
+     * 级联，包括insert(插入)、insertOrReplace(插入或者替换)、update(更新)、delete(删除)
      * @return
      */
-    String[] createIndex() default {};
+    Cascade[] cascade() default {};
 }

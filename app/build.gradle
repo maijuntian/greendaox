@@ -27,8 +27,10 @@ android {
 }
 
 dependencies {
-    compile project(':annotate')
-    compile project(':xgreendao')
-    apt project(':processor')
+    compile 'com.mai.xgreeendao:greendaox_annotate:1.0.0'
+    compile 'com.mai.xgreeendao:greendaox_code:1.0.0'
+    apt 'com.mai.xgreeendao:greendaox_processor:1.0.0'
+    compile 'com.android.support:cardview-v7:23.1.1'
+    compile 'com.android.support:recyclerview-v7:23.1.1'
     testCompile 'junit:junit:4.12'
 }

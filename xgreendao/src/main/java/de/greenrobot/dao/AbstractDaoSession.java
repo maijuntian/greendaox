@@ -66,11 +66,21 @@ public class AbstractDaoSession {
         return dao.insert(entity);
     }
 
+    public <T> void insertInTx(Iterable<T> entities){
+        AbstractDao<T, ?> dao = (AbstractDao<T, ?>) getDao(entities.iterator().next().getClass());
+        dao.insertInTx(entities);
+    }
+
     /** Convenient call for {@link AbstractDao#insertOrReplace(Object)}. */
     public <T> long insertOrReplace(T entity) {
         @SuppressWarnings("unchecked")
         AbstractDao<T, ?> dao = (AbstractDao<T, ?>) getDao(entity.getClass());
         return dao.insertOrReplace(entity);
+    }
+
+    public <T> void insertOrReplaceInTx(Iterable<T> entities){
+        AbstractDao<T, ?> dao = (AbstractDao<T, ?>) getDao(entities.iterator().next().getClass());
+        dao.insertOrReplaceInTx(entities);
     }
 
     /** Convenient call for {@link AbstractDao#refresh(Object)}. */
@@ -87,11 +97,26 @@ public class AbstractDaoSession {
         dao.update(entity);
     }
 
+    public <T> void updateInTx(Iterable<T> entities){
+        AbstractDao<T, ?> dao = (AbstractDao<T, ?>) getDao(entities.iterator().next().getClass());
+        dao.updateInTx(entities);
+    }
+
     /** Convenient call for {@link AbstractDao#delete(Object)}. */
     public <T> void delete(T entity) {
         @SuppressWarnings("unchecked")
         AbstractDao<T, ?> dao = (AbstractDao<T, ?>) getDao(entity.getClass());
         dao.delete(entity);
+    }
+
+    public <T> void deleteInTx(T... entities){
+        AbstractDao<T, ?> dao = (AbstractDao<T, ?>) getDao(entities[0].getClass());
+        dao.deleteInTx(entities);
+    }
+
+    public <T> void deleteInTx(Iterable<T> entities){
+        AbstractDao<T, ?> dao = (AbstractDao<T, ?>) getDao(entities.iterator().next().getClass());
+        dao.deleteInTx(entities);
     }
 
     /** Convenient call for {@link AbstractDao#deleteAll()}. */
@@ -202,4 +227,7 @@ public class AbstractDaoSession {
         return new AsyncSession(this);
     }
 
+    public void clear() {
+
+    }
 }

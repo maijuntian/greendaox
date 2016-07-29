@@ -1,6 +1,9 @@
 package com.mai.bean;
 
+import com.squareup.javapoet.ClassName;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.lang.model.element.Element;
@@ -16,9 +19,66 @@ public class TableM {
     private List<ColumnM> coloums;
     private Element element;
     private ColumnM pK;
-    private String createIndex;
+    private List<String> createIndexs;
+    private boolean isMidTable;
 
-    public TableM(){}
+    private boolean hasCascadeInsert;
+    private boolean hasCascadeUpdate;
+    private boolean hasCascadeInsertOrReplace;
+    private boolean hasCascadeDelete;
+
+    private boolean isLazy = true;
+
+    List<ManyToManyM> manyToManys;
+    List<ToOneM> toOnes;
+    List<ToManyM> toManys;
+
+    public void addManyToMany(ManyToManyM manyToManyM) {
+        if (manyToManys == null)
+            manyToManys = new ArrayList<>();
+        manyToManys.add(manyToManyM);
+
+        parseRelation(manyToManyM);
+    }
+
+    public void addToOne(ToOneM toOneM) {
+        if (toOnes == null)
+            toOnes = new ArrayList<>();
+        toOneM.setIndex(toOnes.size() + coloums.size());
+        toOnes.add(toOneM);
+
+        parseRelation(toOneM);
+    }
+
+    public void addToMany(ToManyM toManyM) {
+        if (toManys == null)
+            toManys = new ArrayList<>();
+        toManys.add(toManyM);
+
+        parseRelation(toManyM);
+    }
+
+    private void parseRelation(BaseRelation relation){
+        if(!relation.isLazy())
+            isLazy = false;
+
+        if(relation.isCascadeInsert())
+            hasCascadeInsert = relation.isCascadeInsert();
+        if(relation.isCascadeInsertOrReplace())
+            hasCascadeInsertOrReplace = relation.isCascadeInsertOrReplace();
+        if(relation.isCascadeUpdate())
+            hasCascadeUpdate = relation.isCascadeUpdate();
+        if(relation.isCascadeDelete())
+            hasCascadeDelete = relation.isCascadeDelete();
+    }
+
+    public void addOneToOneIndex(TableM targetTableM) {
+        String index = "CREATE UNIQUE INDEX IDX_" + targetTableM.getClazzName().toUpperCase() + " ON " + name + "(" + targetTableM.getClazzName().toLowerCase() + "Id);";
+        addCreateIndexs(index);
+    }
+
+    public TableM() {
+    }
 
     public void setElement(Element element) {
         this.element = element;
@@ -44,8 +104,8 @@ public class TableM {
         this.coloums = coloums;
     }
 
-    public void addColoum(ColumnM coloum){
-        if(this.coloums == null)
+    public void addColoum(ColumnM coloum) {
+        if (this.coloums == null)
             coloums = new ArrayList<ColumnM>();
         coloum.setIndex(this.coloums.size());
         this.coloums.add(coloum);
@@ -75,12 +135,61 @@ public class TableM {
         this.pK = pK;
     }
 
-    public String getCreateIndex() {
-        return createIndex;
+    public List<String> getCreateIndexs() {
+        return createIndexs;
     }
 
-    public void setCreateIndex(String createIndex) {
-        this.createIndex = createIndex;
+    public void addCreateIndexs(String... createIndex) {
+        if (createIndexs == null)
+            createIndexs = new ArrayList<>();
+        createIndexs.addAll(Arrays.asList(createIndex));
+    }
+
+    public List<ManyToManyM> getManyToManys() {
+        return manyToManys;
+    }
+
+
+    public List<ToOneM> getToOnes() {
+        return toOnes;
+    }
+
+
+    public List<ToManyM> getToManys() {
+        return toManys;
+    }
+
+
+    public void setMidTable(boolean midTable) {
+        isMidTable = midTable;
+    }
+
+    public boolean isMidTable() {
+        return isMidTable;
+    }
+
+    public boolean isLazy() {
+        return isLazy;
+    }
+
+    public void setLazy(boolean lazy) {
+        isLazy = lazy;
+    }
+
+    public boolean isHasCascadeInsert() {
+        return hasCascadeInsert;
+    }
+
+    public boolean isHasCascadeUpdate() {
+        return hasCascadeUpdate;
+    }
+
+    public boolean isHasCascadeInsertOrReplace() {
+        return hasCascadeInsertOrReplace;
+    }
+
+    public boolean isHasCascadeDelete() {
+        return hasCascadeDelete;
     }
 
     @Override
@@ -90,7 +199,14 @@ public class TableM {
                 ", name='" + name + '\'' +
                 ", clazzName='" + clazzName + '\'' +
                 ", coloums=" + coloums +
+                ", element=" + element +
                 ", pK=" + pK +
+                ", createIndexs=" + createIndexs +
+                ", isMidTable=" + isMidTable +
+                ", isLazy=" + isLazy +
+                ", manyToManys=" + manyToManys +
+                ", toOnes=" + toOnes +
+                ", toManys=" + toManys +
                 '}';
     }
 }

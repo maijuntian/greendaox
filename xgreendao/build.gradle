@@ -1,4 +1,8 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'//添加
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 
 android {
     compileSdkVersion 23
@@ -21,4 +25,16 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
+}
+
+//添加
+publish {
+    artifactId = 'greendaox_code'
+    userOrg = rootProject.userOrg
+    groupId = rootProject.groupId
+    uploadName = rootProject.uploadName
+    publishVersion = rootProject.publishVersion
+    desc = rootProject.description
+    website = rootProject.website
+    licences = rootProject.licences
 }
