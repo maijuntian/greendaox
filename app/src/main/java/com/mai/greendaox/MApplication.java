@@ -11,6 +11,6 @@ public class MApplication extends Application{
     public void onCreate() {
         super.onCreate();
 
-        DataBaseManager.initDataBase(this);
+        XDBManager.initDataBase(this);
     }
 }

@@ -4,23 +4,24 @@ import com.mai.annotate.Column;
 import com.mai.annotate.Id;
 import com.mai.annotate.ManyToOne;
 import com.mai.annotate.Table;
-import com.mai.greendaox.DataBaseManager;
 
 /**
- * Created by mai on 16/7/13.
+ * Created by mai on 16/8/19.
  */
 @Table
-public class Car {
+public class Book {
 
     @Id(autoIncrement = true)
-    Long id;
+    private Long id;
 
     @Column
-    String name;
+    private String name;
 
-    @ManyToOne
-    Children children;
+    @Column
+    private int page;
 
+    @ManyToOne(lazy = false /**取消懒加载，当你查询Book数据的时候，bag的数据也会同时加载*/)
+    private Bag bag;
 
     public Long getId() {
         return id;
@@ -38,21 +39,28 @@ public class Car {
         this.name = name;
     }
 
-    public Children getChildren() {
-        if(children == null)
-            children = DataBaseManager.getOne(this, Children.class, id);
-        return children;
+    public int getPage() {
+        return page;
     }
 
-    public void setChildren(Children children) {
-        this.children = children;
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public Bag getBag() {
+        return bag;
+    }
+
+    public void setBag(Bag bag) {
+        this.bag = bag;
     }
 
     @Override
     public String toString() {
-        return "Car{" +
+        return "Book{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", page=" + page +
                 '}';
     }
 }

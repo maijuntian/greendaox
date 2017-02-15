@@ -73,7 +73,7 @@ public class TableM {
     }
 
     public void addOneToOneIndex(TableM targetTableM) {
-        String index = "CREATE UNIQUE INDEX IDX_" + targetTableM.getClazzName().toUpperCase() + " ON " + name + "(" + targetTableM.getClazzName().toLowerCase() + "Id);";
+        String index = "CREATE UNIQUE INDEX IF NOT EXISTS IDX_" + targetTableM.getClazzName().toUpperCase() + " ON " + name + "(" + targetTableM.getClazzName().toLowerCase() + "Id);";
         addCreateIndexs(index);
     }
 

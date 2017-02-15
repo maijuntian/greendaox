@@ -4,7 +4,7 @@ import com.mai.annotate.Column;
 import com.mai.annotate.Id;
 import com.mai.annotate.OneToOne;
 import com.mai.annotate.Table;
-import com.mai.greendaox.DataBaseManager;
+import com.mai.greendaox.XDBManager;
 
 import java.util.Date;
 
@@ -20,7 +20,7 @@ public class Card {
     private Date date;
 
     @OneToOne
-    public Children children;
+    public Student student;
 
     public String getId() {
         return id;
@@ -38,14 +38,14 @@ public class Card {
         this.date = date;
     }
 
-    public Children getChildren() {
-        if(children == null)
-            DataBaseManager.getOne(this, Children.class, id);
-        return children;
+    public Student getStudent() {
+        if(student == null)
+            student = XDBManager.getOne(this, Student.class, id);
+        return student;
     }
 
-    public void setChildren(Children children) {
-        this.children = children;
+    public void setStudent(Student student) {
+        this.student = student;
     }
 
     @Override

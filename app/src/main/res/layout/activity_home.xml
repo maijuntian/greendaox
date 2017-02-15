@@ -3,12 +3,50 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
-    android:orientation="vertical"
-    >
+    android:padding="20dp"
+    android:orientation="vertical">
 
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:id="@+id/bt_base"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="基础操作"/>
+
+    <Button
+        android:id="@+id/bt_one_one"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="一对一"/>
+
+    <Button
+        android:id="@+id/bt_one_many"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="一对多"/>
+
+    <Button
+        android:id="@+id/bt_many_many"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="多对多"/>
+
+    <Button
+        android:id="@+id/bt_cascade"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="级联操作"/>
+
+    <Button
+        android:id="@+id/bt_lazy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="懒加载"/>
 
 </LinearLayout>

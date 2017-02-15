@@ -4,25 +4,26 @@ import com.mai.annotate.Column;
 import com.mai.annotate.Id;
 import com.mai.annotate.Table;
 
+import java.util.Arrays;
 import java.util.Date;
 
 /**
  * Created by mai on 16/7/24.
  */
-@Table
+@Table(name = "all_type" /**可以指定名字*/ , createIndex = {"CREATE UNIQUE INDEX IDX_TESTLONG_TESTINT ON all_type(testLong, testInt);"}/** 可选，添加索引*/)
 public class AllType {
-    @Column(unique = true)
-    private int testInt;
 
-    @Column
-    private java.util.Date testDate;
-
-    @Column
-    private Boolean testBoolean;
 
     @Id(autoIncrement = true)
+    private Long id;
+    @Column
     private Long testLong;
-
+    @Column/*(unique = true *//**设置唯一*//*)*/
+    private int testInt;
+    @Column (name = "date" /**可以指定名字*/)
+    private java.util.Date testDate;
+    @Column
+    private Boolean testBoolean;
     @Column
     private byte[] testByteArray;
     @Column
@@ -33,7 +34,6 @@ public class AllType {
     private Float testFloat;
     @Column
     private Short testShort;
-
     @Column
     private String testString;
 
@@ -115,5 +115,29 @@ public class AllType {
 
     public void setTestString(String testString) {
         this.testString = testString;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return "AllType{" +
+                "testInt=" + testInt +
+                ", testDate=" + testDate +
+                ", testBoolean=" + testBoolean +
+                ", testLong=" + testLong +
+                ", testByteArray=" + Arrays.toString(testByteArray) +
+                ", testByte=" + testByte +
+                ", testDouble=" + testDouble +
+                ", testFloat=" + testFloat +
+                ", testShort=" + testShort +
+                ", testString='" + testString + '\'' +
+                '}';
     }
 }
