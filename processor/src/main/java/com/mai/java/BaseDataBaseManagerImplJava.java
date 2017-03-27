@@ -21,7 +21,7 @@ public class BaseDataBaseManagerImplJava {
     }
 
     public String getDatabaseManagerClass() {
-        return DATABASE_MANAGER_CLASS;
+        return DATABASE_MANAGER_CLASS + this.dataBaseM.getKey();
     }
 
     public String brewJava() {
@@ -31,15 +31,15 @@ public class BaseDataBaseManagerImplJava {
                 "import android.content.Context;\n" +
                 "\n" +
                 "import de.greenrobot.dao.AbstractDaoSession;\n" +
-                "import " + pkg + ".DaoMaster;\n" +
-                "import " + pkg + ".DaoSession;\n" +
+                "import " + pkg + ".DaoMaster" + this.dataBaseM.getKey() + ";\n" +
+                "import " + pkg + ".DaoSession" + this.dataBaseM.getKey() + ";\n" +
                 "\n" +
-                "public class DBManagerImpl implements DBManager.SessionInter{\n" +
+                "public class DBManagerImpl"+ this.dataBaseM.getKey()+" implements DBManager.SessionInter{\n" +
                 "\n" +
                 "    @Override\n" +
                 "    public AbstractDaoSession getDaoSession(Context context) {\n" +
-                "        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, \"" + dataBaseM.getName() + "\", null);\n" +
-                "        DaoSession mDaoSession = new DaoMaster(helper.getWritableDatabase()).newSession();\n" +
+                "        DaoMaster" + this.dataBaseM.getKey() + ".DevOpenHelper helper = new DaoMaster" + this.dataBaseM.getKey() + ".DevOpenHelper(context, \"" + dataBaseM.getName() + "\", null);\n" +
+                "        DaoSession" + this.dataBaseM.getKey() + " mDaoSession = new DaoMaster" + this.dataBaseM.getKey() + "(helper.getWritableDatabase()).newSession();\n" +
                 "        return mDaoSession;\n" +
                 "    }\n" +
                 "}";

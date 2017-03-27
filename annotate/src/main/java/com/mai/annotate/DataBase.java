@@ -18,6 +18,12 @@ public @interface DataBase {
     String name();
 
     /**
+     * 多数据库时，做区分
+     * @return
+     */
+    int key() default 0;
+
+    /**
      * 数据库版本
      * @return
      */

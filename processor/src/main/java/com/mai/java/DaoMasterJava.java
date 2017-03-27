@@ -85,7 +85,7 @@ public class DaoMasterJava {
     }
 
     private void getConstructor(StringBuilder builder) {
-        builder.append("    public DaoMaster(SQLiteDatabase db) {\n" +
+        builder.append("    public DaoMaster" + getDbKey() + "(SQLiteDatabase db) {\n" +
                 "        super(db, SCHEMA_VERSION);\n");
 
         for (TableM tableM : tables) {
@@ -95,20 +95,24 @@ public class DaoMasterJava {
         builder.append("    }\n");
     }
 
-    private void getSession(StringBuilder builder){
-        builder.append("    public DaoSession newSession() {\n" +
-                "        return new DaoSession(db, IdentityScopeType.Session, daoConfigMap);\n" +
+    private void getSession(StringBuilder builder) {
+        builder.append("    public DaoSession" + getDbKey() + " newSession() {\n" +
+                "        return new DaoSession" + getDbKey() + "(db, IdentityScopeType.Session, daoConfigMap);\n" +
                 "    }\n" +
                 "    \n" +
-                "    public DaoSession newSession(IdentityScopeType type) {\n" +
-                "        return new DaoSession(db, type, daoConfigMap);\n" +
+                "    public DaoSession"+ getDbKey() + " newSession(IdentityScopeType type) {\n" +
+                "        return new DaoSession" + getDbKey() + "(db, type, daoConfigMap);\n" +
                 "    }\n");
     }
 
-    public String brewJava(){
+    private int getDbKey() {
+        return tables.get(0).getDbKey();
+    }
+
+    public String brewJava() {
         StringBuilder builder = new StringBuilder();
         getImport(builder);
-        builder.append("public class DaoMaster extends AbstractDaoMaster {\n");
+        builder.append("public class DaoMaster" + getDbKey() + " extends AbstractDaoMaster {\n");
         getField(builder);
         getGreateTable(builder);
         getDropTable(builder);

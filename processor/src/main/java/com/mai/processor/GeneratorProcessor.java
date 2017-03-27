@@ -25,6 +25,7 @@ import com.mai.bean.TableM;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -138,15 +139,18 @@ public class GeneratorProcessor extends AbstractProcessor {
         return typeL;
     }
 
-    private DataBaseM parseDataBase(Set<? extends Element> dataBaseSet) {
-        DataBaseM dataBaseM = new DataBaseM();
+    private List<DataBaseM> parseDataBase(Set<? extends Element> dataBaseSet) {
+        List<DataBaseM> dataBaseMs = new ArrayList<>();
         for (Element element : dataBaseSet) {
+            DataBaseM dataBaseM = new DataBaseM();
             DataBase dataBase = element.getAnnotation(DataBase.class);
             dataBaseM.setName(dataBase.name());
             dataBaseM.setVersion(dataBase.version());
+            dataBaseM.setKey(dataBase.key());
             note(element, dataBaseM.toString());
+            dataBaseMs.add(dataBaseM);
         }
-        return dataBaseM;
+        return dataBaseMs;
     }
 
     private Map<String, TableM> parseTable(Set<? extends Element> tableSet) {
@@ -161,6 +165,7 @@ public class GeneratorProcessor extends AbstractProcessor {
             tableM.setName("".equals(table.name()) ? tableM.getClazzName().toLowerCase() : table.name());
             tableM.addCreateIndexs(table.createIndex());
             tableM.setMidTable(false);
+            tableM.setDbKey(table.dbKey());
             tables.put(tableM.getType(), tableM);
             note(element, "表：" + tableM.toString());
         }
@@ -413,6 +418,7 @@ public class GeneratorProcessor extends AbstractProcessor {
         }
 
         TableM midTable = new TableM();
+        midTable.setDbKey(tableM.getDbKey());
         midTable.setType(tableType1);
         midTable.setClazzName(tableM.getClazzName() + "_" + targetTableM.getClazzName() + "_");
         midTable.setName(midTable.getClazzName().toLowerCase());
@@ -478,12 +484,12 @@ public class GeneratorProcessor extends AbstractProcessor {
         Set<? extends Element> OneToManySet = roundEnv.getElementsAnnotatedWith(OneToMany.class);
         Set<? extends Element> OneToOneSet = roundEnv.getElementsAnnotatedWith(OneToOne.class);
 
+        List<DataBaseM> dataBases = parseDataBase(dataBaseSet);
         Map<String, TableM> tables = parseTable(tableSet);
-        DataBaseM dataBase = parseDataBase(dataBaseSet);
-        if (dataBaseSet.size() == 0 && tableSet.size() == 0) {
+        if (dataBases.size() == 0 && tableSet.size() == 0) {
             return false;
         }
-        if (dataBaseSet.size() == 0) {
+        if (dataBases.size() == 0) {
             error("Miss DataBase Annotation");
         }
         if (tables.size() == 0) {
@@ -498,25 +504,36 @@ public class GeneratorProcessor extends AbstractProcessor {
         parseManyToMany(manyToManySet, tables);
 
 
-        List<TableM> tableMList = new ArrayList<>(tables.values());
+        List<TableM> tableMListTemp = new ArrayList<>(tables.values());
 
-        /**************java文件输出*******************/
-        writeFile(DEFAULT_PKG_DAO + ".DaoSession", tableMList.get(0).getElement(), new DaoSessionJava(DEFAULT_PKG_DAO, tableMList).brewJave());
-
-        for (TableM tableM : tableMList) {
-            DaoJava daoJava = new DaoJava(DEFAULT_PKG_DAO, tableM);
-            writeFile(DEFAULT_PKG_DAO + "." + daoJava.getDaoName(), tableM.getElement(), daoJava.brewJava());
-            if (tableM.isMidTable()) { //中间表需要创建bean
-                BeanJava beanJava = new BeanJava(DEFAULT_PKG_BEAN, tableM);
-                writeFile(DEFAULT_PKG_BEAN + "." + tableM.getClazzName(), tableM.getElement(), beanJava.brewJava());
+        for (TableM tbM : tableMListTemp) {
+            for (DataBaseM dbM : dataBases) {
+                if (dbM.getKey() == tbM.getDbKey()) {
+                    dbM.addTable(tbM);
+                }
             }
         }
 
-        writeFile(DEFAULT_PKG_DAO + ".DaoMaster", tableMList.get(0).getElement(), new DaoMasterJava(tableMList, DEFAULT_PKG_DAO, dataBase).brewJava());
+        for (DataBaseM dbM : dataBases) {
+            List<TableM> tableMList = dbM.getTableMs();
+            /**************java文件输出*******************/
+            writeFile(DEFAULT_PKG_DAO + ".DaoSession" + dbM.getKey(), tableMList.get(0).getElement(), new DaoSessionJava(DEFAULT_PKG_DAO, tableMList).brewJave());
 
-        BaseDataBaseManagerImplJava dataBaseManagerImplJava = new BaseDataBaseManagerImplJava(dataBase, DEFAULT_PKG_DAO);
-        writeFile(dataBaseManagerImplJava.getDatabaseManagerClass(), tableMList.get(0).getElement(), dataBaseManagerImplJava.brewJava());
-        /**************java文件输出*******************/
+            for (TableM tableM : tableMList) {
+                DaoJava daoJava = new DaoJava(DEFAULT_PKG_DAO, tableM);
+                writeFile(DEFAULT_PKG_DAO + "." + daoJava.getDaoName(), tableM.getElement(), daoJava.brewJava());
+                if (tableM.isMidTable()) { //中间表需要创建bean
+                    BeanJava beanJava = new BeanJava(DEFAULT_PKG_BEAN, tableM);
+                    writeFile(DEFAULT_PKG_BEAN + "." + tableM.getClazzName(), tableM.getElement(), beanJava.brewJava());
+                }
+            }
+
+            writeFile(DEFAULT_PKG_DAO + ".DaoMaster" + dbM.getKey(), tableMList.get(0).getElement(), new DaoMasterJava(tableMList, DEFAULT_PKG_DAO, dbM).brewJava());
+
+            BaseDataBaseManagerImplJava dataBaseManagerImplJava = new BaseDataBaseManagerImplJava(dbM, DEFAULT_PKG_DAO);
+            writeFile(dataBaseManagerImplJava.getDatabaseManagerClass(), tableMList.get(0).getElement(), dataBaseManagerImplJava.brewJava());
+            /**************java文件输出*******************/
+        }
 
         return true;
     }

@@ -40,7 +40,7 @@ public class DaoSessionJava {
     }
 
     private void getConstructor(StringBuilder builder) {
-        builder.append("   public DaoSession(SQLiteDatabase db, IdentityScopeType type, Map<Class<? extends AbstractDao<?, ?>>, DaoConfig>\n" +
+        builder.append("   public DaoSession" + getDbKey() + "(SQLiteDatabase db, IdentityScopeType type, Map<Class<? extends AbstractDao<?, ?>>, DaoConfig>\n" +
                 "            daoConfigMap) {\n" +
                 "        super(db);\n" +
                 "\n");
@@ -69,10 +69,14 @@ public class DaoSessionJava {
         }
     }
 
+    private int getDbKey() {
+        return tables.get(0).getDbKey();
+    }
+
     public String brewJave() {
         StringBuilder builder = new StringBuilder();
         getImport(builder);
-        builder.append("public class DaoSession extends AbstractDaoSession {\n");
+        builder.append("public class DaoSession" + getDbKey() + " extends AbstractDaoSession {\n");
         getFields(builder);
         getConstructor(builder);
         getClear(builder);

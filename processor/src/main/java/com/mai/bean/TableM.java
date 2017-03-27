@@ -13,6 +13,7 @@ import javax.lang.model.element.Element;
  * Created by mai on 16/6/30.
  */
 public class TableM {
+    private int dbKey;
     private String type;
     private String name;
     private String clazzName;
@@ -135,6 +136,14 @@ public class TableM {
         this.pK = pK;
     }
 
+    public int getDbKey() {
+        return dbKey;
+    }
+
+    public void setDbKey(int dbKey) {
+        this.dbKey = dbKey;
+    }
+
     public List<String> getCreateIndexs() {
         return createIndexs;
     }
@@ -207,6 +216,7 @@ public class TableM {
                 ", manyToManys=" + manyToManys +
                 ", toOnes=" + toOnes +
                 ", toManys=" + toManys +
+                ", dbKey=" + dbKey +
                 '}';
     }
 }

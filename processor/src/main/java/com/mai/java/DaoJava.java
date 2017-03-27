@@ -74,6 +74,10 @@ public class DaoJava {
         return table.getClazzName() + "Dao";
     }
 
+    private int getDbKey() {
+        return table.getDbKey();
+    }
+
     private void getImport(StringBuilder builder) {
         builder.append("package " + pkg + ";\n" +
                 "\n" +
@@ -135,7 +139,7 @@ public class DaoJava {
                 "        initMap();\n" +
                 "    }\n" +
                 "    \n" +
-                "    public " + getDaoName() + "(DaoConfig config, DaoSession daoSession) {\n" +
+                "    public " + getDaoName() + "(DaoConfig config, DaoSession" + getDbKey() + " daoSession) {\n" +
                 "        super(config, daoSession);\n" +
                 "        initMap();\n" +
                 "    }"

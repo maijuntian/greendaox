@@ -33,6 +33,5 @@
     <orderEntry type="library" exported="" name="javassist-3.20.0-GA" level="project" />
     <orderEntry type="library" exported="" name="auto-common-0.3" level="project" />
     <orderEntry type="library" exported="" name="guava-18.0" level="project" />
-    <orderEntry type="library" exported="" name="processor.processor" level="project" />
   </component>
 </module>

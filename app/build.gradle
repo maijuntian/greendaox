@@ -27,9 +27,9 @@ android {
 }
 
 dependencies {
-    apt project(':processor')
     compile project(':annotate')
     compile project(':xgreendao')
+    apt project(':processor')
     compile 'com.android.support:appcompat-v7:23.1.1'
     testCompile 'junit:junit:4.12'
 }

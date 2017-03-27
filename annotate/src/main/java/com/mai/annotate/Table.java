@@ -20,6 +20,12 @@ public @interface Table {
     String name() default "";
 
     /**
+     * 多数据库时，做区分
+     * @return
+     */
+    int dbKey() default 0;
+
+    /**
      * 创建索引
      *
      * @return
